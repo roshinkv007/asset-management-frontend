@@ -10,7 +10,7 @@ const EmployeeDashboard = () => {
   const [reason, setReason] = useState("");
   const [accordionOpen, setAccordionOpen] = useState(false);
 
-  const { logout } = useAuth();
+  const { user,logout } = useAuth();
 
   const fetchMyRequests = async () => {
     const res = await api.get("/requests/my");
@@ -44,6 +44,9 @@ const EmployeeDashboard = () => {
       {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Employee Dashboard</h2>
+        <p className="text-sm text-black-600">
+            Welcome, <span className="font-bold">{user?.name}</span>
+          </p>
         <button
           onClick={logout}
           className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../api/axios";
 import { useAuth } from "../auth/AuthContext";
 import { useNavigate } from "react-router-dom";
+import EmployeeAssetHistoryModal from "../components/EmployeeAssetHistoryModal";
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
@@ -10,7 +11,12 @@ const AdminUsers = () => {
     email: "",
     password: "",
     department: "",
+    phone: "",
+    salary: "",
+    joiningDate: "",
   });
+
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
 
   const token = localStorage.getItem("token");
   const { logout } = useAuth();
@@ -54,6 +60,9 @@ const AdminUsers = () => {
       email: "",
       password: "",
       department: "",
+      phone: "",
+      salary: "",
+      joiningDate: "",
     });
 
     fetchUsers();
@@ -79,6 +88,9 @@ const AdminUsers = () => {
       }
     );
     fetchUsers();
+  };
+  const editUser = (id) => {
+    navigate(`/admin/users/${id}/edit`);
   };
 
   return (
@@ -106,9 +118,7 @@ const AdminUsers = () => {
 
         {/* CREATE USER */}
         <div className="bg-white p-6 rounded-xl shadow mb-8 max-w-xl">
-          <h3 className="text-lg font-semibold mb-4">
-            Create New Employee
-          </h3>
+          <h3 className="text-lg font-semibold mb-4">Create New Employee</h3>
 
           <form onSubmit={createUser} className="space-y-3">
             <input
@@ -141,12 +151,64 @@ const AdminUsers = () => {
             />
 
             <input
-              name="department"
-              placeholder="Department"
-              value={form.department}
+              name="phone"
+              placeholder="Phone Number"
+              value={form.phone}
               onChange={handleChange}
               className="w-full border p-2 rounded"
+              required
             />
+
+            <input
+              name="salary"
+              type="number"
+              placeholder="Salary"
+              value={form.salary}
+              onChange={handleChange}
+              className="w-full border p-2 rounded"
+              required
+            />
+
+            <input
+              name="joiningDate"
+              type="date"
+              value={form.joiningDate}
+              onChange={handleChange}
+              className="w-full border p-2 rounded"
+              required
+            />
+
+            <details className="border rounded">
+              <summary className="cursor-pointer p-2 bg-gray-100 rounded">
+                {form.department || "Select Department"}
+              </summary>
+
+              <div className="p-2 space-y-1">
+                {[
+                  "Sales",
+                  "Marketing",
+                  "Human Resource",
+                  "Operations",
+                  "Finance",
+                  "Legal",
+                  "Development",
+                  "IT",
+                ].map((dept) => (
+                  <button
+                    key={dept}
+                    type="button"
+                    className="block w-full text-left p-2 hover:bg-gray-100 rounded"
+                    onClick={() =>
+                      handleChange({
+                        target: { name: "department", value: dept },
+                      })
+                    }
+                  >
+                    {dept}
+                  </button>
+                ))}
+              </div>
+            </details>
 
             <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
               Create Employee
@@ -167,6 +229,7 @@ const AdminUsers = () => {
                   <th className="p-2 text-left">Department</th>
                   <th className="p-2 text-left">Status</th>
                   <th className="p-2 text-left">Actions</th>
+                  <th className="p-2 text-left">Edit</th>
                 </tr>
               </thead>
 
@@ -174,11 +237,13 @@ const AdminUsers = () => {
                 {users
                   .filter((u) => u.role === "employee")
                   .map((user) => (
-                    <tr
-                      key={user._id}
-                      className="border-t hover:bg-gray-50"
-                    >
-                      <td className="p-2">{user.name}</td>
+                    <tr key={user._id} className="border-t hover:bg-gray-50">
+                      <td
+                        className="p-2 text-blue-600 cursor-pointer hover:underline"
+                        onClick={() => setSelectedEmployeeId(user._id)}
+                      >
+                        {user.name}
+                      </td>
                       <td className="p-2">{user.email}</td>
                       <td className="p-2">{user.department}</td>
 
@@ -211,6 +276,14 @@ const AdminUsers = () => {
                           </button>
                         )}
                       </td>
+                      <td className="p-2">
+                        <button
+                          onClick={() => editUser(user._id)}
+                          className="bg-blue-500 text-white text-xs px-3 py-1 rounded hover:bg-blue-600"
+                        >
+                          Edit
+                        </button>
+                      </td>
                     </tr>
                   ))}
               </tbody>
@@ -218,6 +291,12 @@ const AdminUsers = () => {
           </div>
         </div>
       </div>
+      {selectedEmployeeId && (
+        <EmployeeAssetHistoryModal
+          employeeId={selectedEmployeeId}
+          onClose={() => setSelectedEmployeeId(null)}
+        />
+      )}
     </div>
   );
 };

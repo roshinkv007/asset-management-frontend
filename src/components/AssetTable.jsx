@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import api from "../api/axios";
 import HistoryModel from "./HistoryModel";
 
+
+
 const AssetTable = () => {
   const [assets, setAssets] = useState([]);
   const [employees, setEmployees] = useState([]);
@@ -102,10 +104,7 @@ const AssetTable = () => {
       );
       fetchAssets();
     } catch (err) {
-      alert(
-        err.response?.data?.message ||
-          "Failed to complete maintenance"
-      );
+      alert(err.response?.data?.message || "Failed to complete maintenance");
     }
   };
 
@@ -128,18 +127,12 @@ const AssetTable = () => {
   }
 
   if (error) {
-    return (
-      <p className="text-center text-red-500 p-4">
-        {error}
-      </p>
-    );
+    return <p className="text-center text-red-500 p-4">{error}</p>;
   }
 
   return (
     <div className="bg-white p-4 rounded-xl shadow h-full">
-      <h3 className="text-lg font-semibold mb-4">
-        Assets
-      </h3>
+      <h3 className="text-lg font-semibold mb-4">Assets</h3>
 
       <div className="overflow-y-auto max-h-[70vh]">
         <table className="w-full text-sm table-fixed">
@@ -156,39 +149,23 @@ const AssetTable = () => {
           <tbody>
             {assets.length === 0 ? (
               <tr>
-                <td
-                  colSpan="5"
-                  className="text-center p-4 text-gray-500"
-                >
+                <td colSpan="5" className="text-center p-4 text-gray-500">
                   No assets found
                 </td>
               </tr>
             ) : (
               assets.map((asset) => (
-                <tr
-                  key={asset._id}
-                  className="border-t hover:bg-gray-50"
-                >
-                  <td className="p-2">
-                    {asset.name}
-                  </td>
-                  <td className="p-2">
-                    {asset.category}
-                  </td>
+                <tr key={asset._id} className="border-t hover:bg-gray-50">
+                  <td className="p-2">{asset.name}</td>
+                  <td className="p-2">{asset.category}</td>
 
                   <td className="p-2">
-                    <span
-                      className={getStatusBadge(
-                        asset.status
-                      )}
-                    >
+                    <span className={getStatusBadge(asset.status)}>
                       {asset.status}
                     </span>
                   </td>
 
-                  <td className="p-2">
-                    {asset.assignedTo?.name || "-"}
-                  </td>
+                  <td className="p-2">{asset.assignedTo?.name || "-"}</td>
 
                   <td className="p-2 space-y-1">
                     {asset.status === "available" && (
@@ -198,19 +175,13 @@ const AssetTable = () => {
                           onChange={(e) =>
                             setSelectedUser({
                               ...selectedUser,
-                              [asset._id]:
-                                e.target.value,
+                              [asset._id]: e.target.value,
                             })
                           }
                         >
-                          <option value="">
-                            Select employee
-                          </option>
+                          <option value="">Select employee</option>
                           {employees.map((emp) => (
-                            <option
-                              key={emp._id}
-                              value={emp._id}
-                            >
+                            <option key={emp._id} value={emp._id}>
                               {emp.name}
                             </option>
                           ))}
@@ -218,9 +189,7 @@ const AssetTable = () => {
 
                         <button
                           className="bg-blue-500 text-white text-xs px-2 py-1 rounded w-full"
-                          onClick={() =>
-                            assignAsset(asset._id)
-                          }
+                          onClick={() => assignAsset(asset._id)}
                         >
                           Assign
                         </button>
@@ -230,9 +199,7 @@ const AssetTable = () => {
                     {asset.status === "assigned" && (
                       <button
                         className="bg-gray-500 text-white text-xs px-2 py-1 rounded w-full"
-                        onClick={() =>
-                          unassignAsset(asset._id)
-                        }
+                        onClick={() => unassignAsset(asset._id)}
                       >
                         Unassign
                       </button>
@@ -242,9 +209,7 @@ const AssetTable = () => {
                     {asset.status !== "maintenance" && (
                       <button
                         className="bg-yellow-500 text-white text-xs px-2 py-1 rounded w-full"
-                        onClick={() =>
-                          sendToMaintenance(asset._id)
-                        }
+                        onClick={() => sendToMaintenance(asset._id)}
                       >
                         Send to Maintenance
                       </button>
@@ -254,9 +219,7 @@ const AssetTable = () => {
                     {asset.status === "maintenance" && (
                       <button
                         className="bg-green-600 text-white text-xs px-2 py-1 rounded w-full"
-                        onClick={() =>
-                          completeMaintenance(asset._id)
-                        }
+                        onClick={() => completeMaintenance(asset._id)}
                       >
                         Maintenance Completed
                       </button>
@@ -264,9 +227,7 @@ const AssetTable = () => {
 
                     <button
                       className="bg-slate-600 text-white text-xs px-2 py-1 rounded w-full"
-                      onClick={() =>
-                        setSelectedAsset(asset)
-                      }
+                      onClick={() => setSelectedAsset(asset)}
                     >
                       History / PDF
                     </button>
@@ -281,9 +242,7 @@ const AssetTable = () => {
       {selectedAsset && (
         <HistoryModel
           asset={selectedAsset}
-          onClose={() =>
-            setSelectedAsset(null)
-          }
+          onClose={() => setSelectedAsset(null)}
         />
       )}
     </div>

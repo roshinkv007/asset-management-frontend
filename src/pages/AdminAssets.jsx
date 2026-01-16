@@ -75,14 +75,39 @@ const AdminAssets = () => {
               required
             />
 
-            <input
-              name="category"
-              placeholder="Category (Laptop, Phone, etc)"
-              value={form.category}
-              onChange={handleChange}
-              className="w-full border p-2 rounded"
-              required
-            />
+            <details className="border rounded" required>
+              <summary className="cursor-pointer p-2 bg-gray-100 rounded">
+                {form.category || "Select Asset Category"}
+              </summary>
+
+              <div className="p-2 space-y-1">
+                {[
+                  "Laptop",
+                  "Desktop",
+                  "Mobile Phone",
+                  "Tablet",
+                  "Monitor",
+                  "Keyboard",
+                  "Mouse",
+                  "Printer",
+                  "Network Device",
+                  "Other",
+                ].map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    className="block w-full text-left p-2 hover:bg-gray-100 rounded"
+                    onClick={() =>
+                      handleChange({
+                        target: { name: "category", value: cat },
+                      })
+                    }
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            </details>
 
             <input
               name="serialNumber"
