@@ -7,17 +7,17 @@ import ProtectedRoute from "./auth/ProtectedRoute";
 import AdminAssets from "./pages/AdminAssets";
 import { useAuth } from "./auth/AuthContext";
 import { Navigate } from "react-router-dom";
-import ManageUsers from "./pages/admin/ManageUsers";
+
 import EditEmployee from "./pages/EditEmployee";
+import AdminCategories from "./pages/AdminCategories";
+import AdminDepartments from "./pages/AdminDepartments";
 
 const App = () => {
-  const { user } = useAuth();
+  useAuth();
 
   return (
     <BrowserRouter>
       <Routes>
-       
-
         <Route path="/" element={<Login />} />
         <Route
           path="/admin"
@@ -27,6 +27,7 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+        <Route path="/admin/assets/categories" element={<AdminCategories />} />
         <Route
           path="/admin/users"
           element={
@@ -35,6 +36,7 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/admin/assets"
           element={
@@ -52,12 +54,15 @@ const App = () => {
           }
         />
         <Route
-          path="/admin/users"
+          path="/admin/users/departments"
           element={
-            user?.role === "admin" ? <ManageUsers /> : <Navigate to="/" />
+            <ProtectedRoute role="admin">
+              <AdminDepartments />
+            </ProtectedRoute>
           }
         />
-         <Route path="/admin/users/:id/edit" element={<EditEmployee />} />
+
+        <Route path="/admin/users/:id/edit" element={<EditEmployee />} />
       </Routes>
     </BrowserRouter>
   );

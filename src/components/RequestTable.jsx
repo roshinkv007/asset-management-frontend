@@ -18,18 +18,42 @@ const RequestTable = () => {
     fetchRequests();
   }, []);
 
+  // 🔴 CHANGE START: auto-pick available asset on approve
   const updateStatus = async (id, status) => {
-    await api.put(
-      `/requests/${id}`,
-      { status },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+    try {
+      let assetId = null;
+
+      if (status === "approved") {
+        // fetch first available asset
+        const assetRes = await api.get("/assets?status=available", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!assetRes.data.length) {
+          return alert("No available assets");
+        }
+
+        assetId = assetRes.data[0]._id;
       }
-    );
-    fetchRequests();
+
+      await api.put(
+        `/requests/${id}`,
+        { status, assetId },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      fetchRequests();
+    } catch (err) {
+      alert(err.response?.data?.message || "Action failed");
+    }
   };
+  // 🔴 CHANGE END
 
   return (
     <div className="bg-white p-4 rounded-xl shadow h-full">
@@ -48,14 +72,8 @@ const RequestTable = () => {
 
           <tbody>
             {requests.map((req) => (
-              <tr
-                key={req._id}
-                className="border-t hover:bg-gray-50"
-              >
-                <td className="p-2 wrap-break-words">
-                  {req.user?.name}
-                </td>
-
+              <tr key={req._id} className="border-t hover:bg-gray-50">
+                <td className="p-2">{req.user?.name}</td>
                 <td className="p-2">{req.assetCategory}</td>
 
                 <td className="p-2">

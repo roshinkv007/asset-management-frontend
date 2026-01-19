@@ -30,6 +30,18 @@ const HistoryModel = ({ asset, onClose }) => {
     }
   };
 
+  const formatNotes = (h) => {
+    if (h.action === "assigned" && h.assignedTo) {
+      return `Assigned to ${h.assignedTo.name}`;
+    }
+
+    if (h.action === "unassigned" && h.assignedTo) {
+      return `Unassigned from ${h.assignedTo.name}`;
+    }
+
+    return h.notes || "-";
+  };
+
   return (
     <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
@@ -58,11 +70,9 @@ const HistoryModel = ({ asset, onClose }) => {
           <tbody>
             {history.map((h) => (
               <tr key={h._id} className="border-t">
-                <td className="p-2 font-medium">
-                  {formatAction(h.action)}
-                </td>
+                <td className="p-2 font-medium">{formatAction(h.action)}</td>
                 <td className="p-2">{h.performedBy?.name}</td>
-                <td className="p-2">{h.notes || "-"}</td>
+                <td className="p-2">{formatNotes(h)}</td>
                 <td className="p-2">
                   {new Date(h.createdAt).toLocaleString()}
                 </td>

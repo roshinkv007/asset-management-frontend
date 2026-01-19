@@ -16,6 +16,13 @@ const AdminUsers = () => {
     joiningDate: "",
   });
 
+  // ===== CHANGED: department dropdown state =====
+  const [deptQuery, setDeptQuery] = useState("");
+  const [deptOpen, setDeptOpen] = useState(false);
+
+  // ===== CHANGED: departments from API =====
+  const [departments, setDepartments] = useState([]);
+
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
 
   const token = localStorage.getItem("token");
@@ -24,15 +31,22 @@ const AdminUsers = () => {
 
   const fetchUsers = async () => {
     const res = await api.get("/users", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { Authorization: `Bearer ${token}` },
     });
     setUsers(res.data);
   };
 
+  // ===== ADDED: fetch departments =====
+  const fetchDepartments = async () => {
+    const res = await api.get("/departments", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setDepartments(res.data.map((d) => d.name));
+  };
+
   useEffect(() => {
     fetchUsers();
+    fetchDepartments(); // ← ADDED
   }, []);
 
   const handleChange = (e) => {
@@ -44,15 +58,8 @@ const AdminUsers = () => {
 
     await api.post(
       "/users",
-      {
-        ...form,
-        role: "employee",
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
+      { ...form, role: "employee" },
+      { headers: { Authorization: `Bearer ${token}` } }
     );
 
     setForm({
@@ -65,14 +72,15 @@ const AdminUsers = () => {
       joiningDate: "",
     });
 
+    setDeptQuery("");
+    setDeptOpen(false);
+
     fetchUsers();
   };
 
   const deleteUser = async (id) => {
     await api.delete(`/users/${id}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { Authorization: `Bearer ${token}` },
     });
     fetchUsers();
   };
@@ -81,14 +89,11 @@ const AdminUsers = () => {
     await api.put(
       `/users/${id}/restore`,
       {},
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
+      { headers: { Authorization: `Bearer ${token}` } }
     );
     fetchUsers();
   };
+
   const editUser = (id) => {
     navigate(`/admin/users/${id}/edit`);
   };
@@ -100,13 +105,22 @@ const AdminUsers = () => {
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">Users Management</h2>
 
-          <div className="space-x-2">
+          {/* ===== ADDED: MANAGE DEPARTMENTS BUTTON ===== */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => navigate("/admin/users/departments")}
+              className="bg-indigo-600 text-white px-3 py-2 rounded hover:bg-indigo-700"
+            >
+              Manage Departments
+            </button>
+
             <button
               onClick={() => navigate("/admin")}
               className="bg-gray-600 text-white px-3 py-2 rounded"
             >
               Dashboard
             </button>
+
             <button
               onClick={logout}
               className="bg-red-500 text-white px-3 py-2 rounded"
@@ -114,6 +128,7 @@ const AdminUsers = () => {
               Logout
             </button>
           </div>
+          {/* ===== END ADDED ===== */}
         </div>
 
         {/* CREATE USER */}
@@ -178,37 +193,56 @@ const AdminUsers = () => {
               required
             />
 
-            <details className="border rounded">
-              <summary className="cursor-pointer p-2 bg-gray-100 rounded">
-                {form.department || "Select Department"}
-              </summary>
-
-              <div className="p-2 space-y-1">
-                {[
-                  "Sales",
-                  "Marketing",
-                  "Human Resource",
-                  "Operations",
-                  "Finance",
-                  "Legal",
-                  "Development",
-                  "IT",
-                ].map((dept) => (
-                  <button
-                    key={dept}
-                    type="button"
-                    className="block w-full text-left p-2 hover:bg-gray-100 rounded"
-                    onClick={() =>
-                      handleChange({
-                        target: { name: "department", value: dept },
-                      })
+            {/* ===== CHANGED: DEPARTMENT FROM API + SEARCH ===== */}
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Select Department"
+                value={deptQuery}
+                onChange={(e) => {
+                  setDeptQuery(e.target.value);
+                  setDeptOpen(true);
+                }}
+                onFocus={() => setDeptOpen(true)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    const filtered = departments.filter((d) =>
+                      d.toLowerCase().includes(deptQuery.toLowerCase())
+                    );
+                    if (filtered.length > 0) {
+                      setForm({ ...form, department: filtered[0] });
+                      setDeptQuery(filtered[0]);
+                      setDeptOpen(false);
                     }
-                  >
-                    {dept}
-                  </button>
-                ))}
-              </div>
-            </details>
+                  }
+                }}
+                className="w-full border p-2 rounded"
+                required
+              />
+
+              {deptOpen && (
+                <div className="absolute z-10 w-full bg-white border rounded shadow max-h-48 overflow-y-auto">
+                  {departments
+                    .filter((d) =>
+                      d.toLowerCase().includes(deptQuery.toLowerCase())
+                    )
+                    .map((dept) => (
+                      <div
+                        key={dept}
+                        className="p-2 cursor-pointer hover:bg-gray-100"
+                        onClick={() => {
+                          setForm({ ...form, department: dept });
+                          setDeptQuery(dept);
+                          setDeptOpen(false);
+                        }}
+                      >
+                        {dept}
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
 
             <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
               Create Employee
@@ -216,81 +250,60 @@ const AdminUsers = () => {
           </form>
         </div>
 
-        {/* USERS TABLE */}
-        <div className="bg-white p-6 rounded-xl shadow">
-          <h3 className="text-lg font-semibold mb-4">Employees</h3>
+{/* EMPLOYEES TABLE */}
+<div className="bg-white p-6 rounded-xl shadow">
+  <h3 className="text-lg font-semibold mb-4">Employees</h3>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-200">
-                <tr>
-                  <th className="p-2 text-left">Name</th>
-                  <th className="p-2 text-left">Email</th>
-                  <th className="p-2 text-left">Department</th>
-                  <th className="p-2 text-left">Status</th>
-                  <th className="p-2 text-left">Actions</th>
-                  <th className="p-2 text-left">Edit</th>
-                </tr>
-              </thead>
+  <div className="overflow-x-auto">
+    <table className="w-full text-sm">
+      <thead className="bg-gray-200">
+        <tr>
+          <th className="p-2 text-left">Name</th>
+          <th className="p-2 text-left">Email</th>
+          <th className="p-2 text-left">Department</th>
+          <th className="p-2 text-left">Actions</th>
+        </tr>
+      </thead>
 
-              <tbody>
-                {users
-                  .filter((u) => u.role === "employee")
-                  .map((user) => (
-                    <tr key={user._id} className="border-t hover:bg-gray-50">
-                      <td
-                        className="p-2 text-blue-600 cursor-pointer hover:underline"
-                        onClick={() => setSelectedEmployeeId(user._id)}
-                      >
-                        {user.name}
-                      </td>
-                      <td className="p-2">{user.email}</td>
-                      <td className="p-2">{user.department}</td>
+      <tbody>
+        {users.map((user) => (
+          <tr key={user._id} className="border-t hover:bg-gray-50">
+            <td className="p-2">{user.name}</td>
+            <td className="p-2">{user.email}</td>
+            <td className="p-2">{user.department}</td>
 
-                      <td className="p-2">
-                        <span
-                          className={`px-2 py-1 rounded text-xs ${
-                            user.isDeleted
-                              ? "bg-red-100 text-red-700"
-                              : "bg-green-100 text-green-700"
-                          }`}
-                        >
-                          {user.isDeleted ? "Inactive" : "Active"}
-                        </span>
-                      </td>
+            <td className="p-2 flex gap-2">
+              <button
+                onClick={() => setSelectedEmployeeId(user._id)}
+                className="bg-indigo-600 text-white text-xs px-2 py-1 rounded"
+              >
+                History
+              </button>
 
-                      <td className="p-2 space-x-2">
-                        {!user.isDeleted ? (
-                          <button
-                            onClick={() => deleteUser(user._id)}
-                            className="bg-red-500 text-white text-xs px-2 py-1 rounded"
-                          >
-                            Disable
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => restoreUser(user._id)}
-                            className="bg-green-500 text-white text-xs px-2 py-1 rounded"
-                          >
-                            Restore
-                          </button>
-                        )}
-                      </td>
-                      <td className="p-2">
-                        <button
-                          onClick={() => editUser(user._id)}
-                          className="bg-blue-500 text-white text-xs px-3 py-1 rounded hover:bg-blue-600"
-                        >
-                          Edit
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+              <button
+                onClick={() => editUser(user._id)}
+                className="bg-blue-500 text-white text-xs px-2 py-1 rounded"
+              >
+                Edit
+              </button>
+
+              <button
+                onClick={() => deleteUser(user._id)}
+                className="bg-red-500 text-white text-xs px-2 py-1 rounded"
+              >
+                Remove
+              </button>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
       </div>
+
       {selectedEmployeeId && (
         <EmployeeAssetHistoryModal
           employeeId={selectedEmployeeId}
